@@ -1,9 +1,11 @@
+require('dotenv').config();
 const { log, error } = require('console');
 const express = require('express');
 const path = require('path');
 const app = express();
 const pg = require("pg");
-const port = 3000;
+const postgres=require('postgres');
+const port = process.env.port || 5000;
 let stoke = [];
 let bills = []
 let gstRate = 18;
@@ -11,14 +13,18 @@ let print=[];
 let orignalgst=[];
 let orignalmobile=[];
 let orignalbaseprice=[]
-const sql = postgres({
+const db = new pg.Client({
   host: process.env.DATABASE_HOST,
+  port: process.env.DATABASE_PORT,
   database: process.env.DATABASE_NAME,
-  username: process.env.DATABASE_USER,
+  user: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
-  ssl: 'require',
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
+db.connect();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
@@ -416,8 +422,9 @@ app.get("/sdelete/:test",async(req,res)=>{
 
 app.post("/s/:t",async(req,res)=>{
   try {
-    if(req.params.t==='update'){
+    if(req.params.t==="update"){
       const data = req.body;
+      console.log(data);
       // console.log(data);
     
       db.query("UPDATE stoke SET mobilebrand=$1, mobilename=$2,varient=$3,color=$4 WHERE id=$5",
@@ -425,7 +432,9 @@ app.post("/s/:t",async(req,res)=>{
       stoke = []
       res.redirect("/allstock");
 
-    }else{
+    }
+    
+    if(req.params.t==="delete"){
       const data = req.body;
   // console.log(data);
  
